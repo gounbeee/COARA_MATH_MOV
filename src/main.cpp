@@ -284,25 +284,27 @@ int main () {
 	cv::Mat frame;
 
 
-
-
+	// < PLAYING SOUND USING OPENCV ! > 
+	// https://shizenkarasuzon.hatenablog.com/entry/2020/03/21/000437#%E6%94%B9%E8%89%AF%E9%9F%B3%E5%A3%B0%E5%86%8D%E7%94%9F
 
 	while( !glfwWindowShouldClose(window) ) {
 
+		// CAPTURE FRAME
+	    //cap >> frame;
 
-	    cap >> frame;
 
-	    if( frame.empty() ) {
+		cap.read(frame); 								//1フレーム分取り出してimgに保持させる
+		if (frame.empty()) { 							//読み込んだ画像がempty、つまり最終フレームに達したとき
+			cap.set(cv::CAP_PROP_POS_FRAMES, 0);  		//また最初から再生し直す
+			cap.read(frame);
+		}
 
-	    	break; // Ran out of film
+		
+    	cv::imshow( "Example 2-3", frame );
 
-	    } else {
-	
-	    	cv::imshow( "Example 2-3", frame );
+	    if( (char)cv::waitKey(33) >= 0 ) break;
 
-		    if( (char)cv::waitKey(33) >= 0 ) break;
 
-	    }
 
 
     

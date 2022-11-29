@@ -14,9 +14,11 @@ find . -name '._*' -type f -delete
 // ------------------------------------------------------------------------------------
 
 
+// < USING nm COMMAND >
+// https://www.ibm.com/docs/en/aix/7.2?topic=n-nm-command
 
 
-
++
 
 
 
@@ -24,6 +26,9 @@ find . -name '._*' -type f -delete
 // < SOLVE SYMBOL PATH PROBLEM !!! >
 // https://blog.enjoitech.com/article/216
 // 
+
+
+
 
 dyld: Symbol not found: _libiconv_open
   Referenced from: /usr/local/rvm/rubies/ruby-1.8.7-p334/lib/ruby/1.8/i686-darwin10.7.0/iconv.bundle
