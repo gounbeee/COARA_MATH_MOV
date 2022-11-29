@@ -43,15 +43,16 @@ HEADER_DIRS := header
 BUILD_DIR := build
 BUILD_PATH := $(shell pwd)/$(BUILD_DIR)
 
-INC_FLAGS := -I$(HEADER_DIRS) -I/usr/local/include -I/usr/local/include/opencv4
+INC_FLAGS := -I$(HEADER_DIRS) -I/usr/local/include -I/usr/local/include/opencv4 -I/usr/local/include/SDL3
 #INC_FLAGS := -I$(HEADER_DIRS) -I/usr/local/include -I/usr/local/Cellar/opencv/4.6.0_1/include
 #INC_FLAGS := -I$(HEADER_DIRS) -Iexternal/imgui -Iexternal/stb -I/usr/local/include
 
 
-LIBS_FLAGS_OPENCV := -lopencv_core -lopencv_videoio -lopencv_calib3d -lopencv_core -lopencv_dnn -lopencv_features2d -lopencv_flann -lopencv_gapi -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_ml -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_video
+LIBS_FLAGS_SDL := -lSDL3
+# LIBS_FLAGS_OPENCV := -lopencv_core -lopencv_videoio -lopencv_calib3d -lopencv_core -lopencv_dnn -lopencv_features2d -lopencv_flann -lopencv_gapi -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_ml -lopencv_objdetect -lopencv_photo -lopencv_stitching -lopencv_video
 
 
-LIB_FLAGS := -lstdc++ -lGLEW -lglfw3 $(LIBS_FLAGS_OPENCV) -framework Cocoa -framework OpenGL -framework IOKit 
+LIB_FLAGS := -lstdc++ -lGLEW -lglfw3 $(LIBS_FLAGS_SDL) -framework Cocoa -framework OpenGL -framework IOKit 
 #LIB_FLAGS := -lstdc++ -lGLEW -lglfw3 -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 #LIB_FLAGS := -lGLEW -lglfw3 -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 

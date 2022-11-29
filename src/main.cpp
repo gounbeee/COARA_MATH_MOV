@@ -1,638 +1,224 @@
 #include <iostream>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <cmath>
-
-#include "Shader.h"
-#include "Camera.hpp"
 
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-
-// BELOW MACRO IS CRITICAL TO BE IMPLEMENTED CORRECTLY
-#define STB_IMAGE_IMPLEMENTATION
-
-#include "stb_image.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
+#include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
-
-
-#include "opencv2/opencv.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-
-
-
-// SCREEN SIZE
-#define SCR_WIDTH 1000
-#define SCR_HEIGHT 800
-
-// SIZE OF TEXTURE MAP
-#define MAPSIZE_X 10
-#define MAPSIZE_Y 10
-#define MAPSIZE_Z 10
-
-
-// SHADER VERSION
-#define GLSL_VERSION "#version 330"
-
-
-
-
-// SAMPLE MODELING
-float vertices[] = {
-
-	/*Top Position */		/* Color */				/* TexCoords */
-	-0.5f,-0.5f, 0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	 0.5f,-0.5f, 0.5f,		0.0f, 1.0f, 0.0f,		1.0f, 0.0f,
-	 0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	 0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	-0.5f, 0.5f, 0.5f,		1.0f, 1.0f, 0.0f,		0.0f, 1.0f,
-	-0.5f,-0.5f, 0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	/* Bottom Position */	/* Color */				/* TexCoords */
-	-0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	 0.5f,-0.5f,-0.5f,		0.0f, 1.0f, 0.0f,		1.0f, 0.0f,
-	 0.5f, 0.5f,-0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	 0.5f, 0.5f,-0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	-0.5f, 0.5f,-0.5f,		1.0f, 1.0f, 0.0f,		0.0f, 1.0f,
-	-0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	/* Left Position */		/* Color */				/* TexCoords */
-	-0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	-0.5f, 0.5f,-0.5f,		0.0f, 1.0f, 0.0f,		1.0f, 0.0f,
-	-0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	-0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	-0.5f,-0.5f, 0.5f,		1.0f, 1.0f, 0.0f,		0.0f, 1.0f,
-	-0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	/* Right Position */	/* Color */				/* TexCoords */
-	 0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	 0.5f, 0.5f,-0.5f,		0.0f, 1.0f, 0.0f,		1.0f, 0.0f,
-	 0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	 0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	 0.5f,-0.5f, 0.5f,		1.0f, 1.0f, 0.0f,		0.0f, 1.0f,
-	 0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	/* Back Position */		/* Color */				/* TexCoords */
-   	-0.5f, 0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	 0.5f, 0.5f,-0.5f,		0.0f, 1.0f, 0.0f,		1.0f, 0.0f,
-	 0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	 0.5f, 0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-   	-0.5f, 0.5f, 0.5f,		1.0f, 1.0f, 0.0f,		0.0f, 1.0f,
-   	-0.5f, 0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	/* Front Position */	/* Color */				/* TexCoords */
-	-0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-	 0.5f,-0.5f,-0.5f,		0.0f, 1.0f, 0.0f,		1.0f, 0.0f,
-	 0.5f,-0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	 0.5f,-0.5f, 0.5f,		0.0f, 0.0f, 1.0f,		1.0f, 1.0f,
-	-0.5f,-0.5f, 0.5f,		1.0f, 1.0f, 0.0f,		0.0f, 1.0f,
-	-0.5f,-0.5f,-0.5f,		1.0f, 0.0f, 0.0f,		0.0f, 0.0f,
-
-};
-
-
-
-
-
-
-
-
-/* Functions */
-void framebuffer_size_callback(GLFWwindow* window, int width, int height); // Protype
-void userInput(GLFWwindow* window); // protype
-void mouse_cursor_position(GLFWwindow* window, double xpos, double ypos); // Protype
-void mouse_scroll_position(GLFWwindow* window, double xoffset, double yoffset); // Protype
-unsigned int load_texture(const char* texture_path); // Protype
-
-
-
-static void ShowExampleAppMainMenuBar();
-static void ShowExampleMenuFile();
-
-
-
-
-/* Matrices */
-glm::mat4 model;
-glm::mat4 projection;
-glm::mat4 view;
-
-
-
-/* Frames */
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
-
-
-/* Camera */
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = float(SCR_WIDTH) / 2.0f;
-float lastY = float(SCR_HEIGHT) / 2.0f;
-bool isFirstMouse = true;
-
-
-
-
-
-
-
-
-
-int main () {
-
-	std::cout << "OK\n";
-
-
-
-	/* Initialize GLFW */
-	glfwInit();
-
-
-	/* Initialize Version 3.3 */
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-
-
-#ifdef __APPLE__
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#include <stdio.h>
+#include <SDL.h>
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+#include <SDL_opengles2.h>
+#else
+#include <SDL_opengl.h>
 #endif
 
 
 
-	/* Create a window */
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL 3.3", NULL, NULL);
 
 
 
-	// Check window
-	if (!window) {
 
-		std::cout << "Failed to Create a window\n";
-		glfwTerminate();
 
-	}
-
-
-
-	/* The most important part */
-	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, mouse_cursor_position);
-	glfwSetScrollCallback(window, mouse_scroll_position);
-
-
-
-
-
-	// check Glew 
-	if (glewInit() != GLEW_OK)
-	{
-		std::cout << "Failed to initialize Glew\n";
-		glfwTerminate();
-	}
-
-
-	/* Options */
-	glEnable(GL_DEPTH_TEST);
-
-
-
-	// ------------------------------------------------------------------
-	// ImGui
-
-	IMGUI_CHECKVERSION();
-
-	ImGui::CreateContext();
-
-	ImGuiIO& io = ImGui::GetIO();
-
-
-	// Setup the Platform
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(GLSL_VERSION);
-
-
-	// Setup style
-	ImGui::StyleColorsDark();
-
-
-
-	// ShowDemo
-	bool ShowDemo = true;
-
-
-
-
-
-	// ------------------------------------------------------------------
-	// OPENGL
-
-
-	/* Buffers */
-	unsigned int VBO, VAO;
-
-	glGenVertexArrays(1, &VAO);
-
-	glGenBuffers(1, &VBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-
-
-	/* Position Attribute */
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-
-	/* Color Attribute*/
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-
-	/* Texture Attribute */
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-
-	/* Texture */
-	stbi_set_flip_vertically_on_load(true);
-	unsigned int container_texture = load_texture("resources/textures/container.jpg");
-	unsigned int face_texture = load_texture("resources/textures/awesomeface.png");
-	GLuint pyramid_texture = load_texture("resources/textures/pyramid.jpg");
-
-
-	/* Shader */
-	Shader myShader("resources/shaders/vertexShader.glsl", "resources/shaders/fragmentShader.glsl");
-	myShader.use();
-	myShader.setInt("container_texture", 0);
-	myShader.setInt("face_texture", 1);
-	myShader.setInt("pyramid_texture", 2);
-
-
-
-
-	cv::VideoCapture cap;
-
-	cap.open("resources/sample-15s.mp4");
-
-	cv::Mat frame;
-
-
-	// < PLAYING SOUND USING OPENCV ! > 
-	// https://shizenkarasuzon.hatenablog.com/entry/2020/03/21/000437#%E6%94%B9%E8%89%AF%E9%9F%B3%E5%A3%B0%E5%86%8D%E7%94%9F
-
-	while( !glfwWindowShouldClose(window) ) {
-
-		// CAPTURE FRAME
-	    //cap >> frame;
-
-
-		cap.read(frame); 								//1フレーム分取り出してimgに保持させる
-		if (frame.empty()) { 							//読み込んだ画像がempty、つまり最終フレームに達したとき
-			cap.set(cv::CAP_PROP_POS_FRAMES, 0);  		//また最初から再生し直す
-			cap.read(frame);
-		}
-
-		
-    	cv::imshow( "Example 2-3", frame );
-
-	    if( (char)cv::waitKey(33) >= 0 ) break;
-
-
-
-
+// Main code
+int main(int, char**)
+{
+    // Setup SDL
+    // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
+    // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to the latest version of SDL is recommended!)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // Decide GL+GLSL versions
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char* glsl_version = "#version 100";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#elif defined(__APPLE__)
+    // GL 3.2 Core + GLSL 150
+    const char* glsl_version = "#version 150";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#else
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
+
+    // Create window with graphics context
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     
+    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    
+    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    
+    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-	
-		userInput(window);
-		float time = glfwGetTime();
-		deltaTime = time - lastFrame;
-		lastFrame = time;
-		float xValue = std::cos(time) / 2.0f + 0.5f; // 0.0f - 1.0f
-		float yValue = std::cos(time) / 2.0f + 0.5f; // 0.0f - 1.0f
-		float zValue = std::sin(time) / 2.0f + 0.5f; // 0.0f - 1.0f
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
 
-		float radius = 5.0f;
-		float camX = std::sin(time) * radius;
-		float camZ = std::cos(time) * radius;
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
-		myShader.setFloat("alpha", xValue);
+    // Load Fonts
+    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
+    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
+    // - Read 'docs/FONTS.md' for more instructions and details.
+    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
+    //io.Fonts->AddFontDefault();
+    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
+    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    //IM_ASSERT(font != NULL);
 
-		//vector
-		glm::vec3 myVector;
-		myVector.x = xValue;
-		myVector.y = yValue;
-		myVector.z = 0.31f;
+    // Our state
+    bool show_demo_window = true;
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-		myShader.setVec3("colors", myVector);
+    // Main loop
+    bool done = false;
 
 
-		/* Coordinates */
-		// Projection
-		projection = glm::perspective(glm::radians(camera.Zoom), float(SCR_WIDTH) / float(SCR_HEIGHT), 0.1f, 100.0f);
-		myShader.setMat4("projection", projection);
 
-		// View
-		view = glm::mat4(1.0f);
-		view = camera.GetViewMatrix();
-		myShader.setMat4("view", view);
 
-		// Model
-		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(1.0f));
-		myShader.setMat4("model", model);
 
-		/* Render */
-		glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // 0.0 - 1.0
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 
-		myShader.use();
 
-		glBindVertexArray(VAO);
-		glLineWidth(10.0f);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, container_texture);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, face_texture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
-
-
-		/* Start new frame for Dear ImGui */
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-
-		if (ShowDemo) ImGui::ShowDemoWindow(&ShowDemo);
-
-		
-		ShowExampleAppMainMenuBar();
-
-
-
-		// MOVIE CONTORLLER
-		ImGui::Begin("Controller"); // Note: it's better not to use ' (quotes) inside the double quotes
-		// ImGui::Text("Hello ppl wassup");
-		ImGui::Button("Play");
-		ImGui::Button("Stop");
-		ImGui::End();
-
-
-
-
-		// Render to screen
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		
-
-
-		// ---------------------------------------------------------------
-
-		//Display
-		glfwSwapBuffers(window);
-		//Pollevents
-		glfwPollEvents();
-
-	}
-
-
-
-	/* Clear */
-	ImGui_ImplGlfw_Shutdown();
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui::DestroyContext();
-	glfwDestroyWindow(window);
-	glfwTerminate();
-
-
-
-}
-
-
-
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-
-	glViewport(0, 0, width, height);
-
-}
-
-
-void userInput(GLFWwindow* window) {
-
-	const float camera_speed = 2.5f * deltaTime;
-
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // To exit the program
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_TRUE) // Forward
-		camera.ProcessKeyboard(FORWARD, deltaTime);
-	else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_TRUE) // Backward
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_TRUE) // Right
-		camera.ProcessKeyboard(RIGHT, deltaTime);
-	else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_TRUE) // Left
-		camera.ProcessKeyboard(LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_TRUE) // Up
-		camera.ProcessKeyboard(UP, deltaTime);
-	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_TRUE) // Down
-		camera.ProcessKeyboard(DOWN, deltaTime);
-
-}
-
-
-
-void mouse_cursor_position(GLFWwindow* window, double xpos, double ypos) {
-
-	if (isFirstMouse) {
-
-		lastX = xpos;
-		lastY = ypos;
-		isFirstMouse = false;
-
-	}
-
-
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos;
-	lastX = xpos;
-	lastY = ypos;
-
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_TRUE)
-		camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-
-
-void mouse_scroll_position(GLFWwindow* window, double xoffset, double yoffset) {
-
-
-	camera.ProcessMouseScroll(yoffset);
-
-
-}
-
-
-
-unsigned int load_texture(const char* texture_path) {
-
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	/* Filter Options */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-
-	int width, height, nrChannels;
-	unsigned char* data = stbi_load(texture_path, &width, &height, &nrChannels, 0);
-
-	if (data) {
-
-		GLenum format;
-		if (nrChannels == 1)
-			format = GL_RED;
-		if (nrChannels == 3) // jpg file
-			format = GL_RGB;
-		if (nrChannels == 4) // png file
-			format = GL_RGBA;
-
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-
-	} else {
-
-
-		std::cout << "Failed to load texture\n";
-
-	}
-
-
-	stbi_image_free(data);
-
-	return texture;
-}
-
-
-
-
-
-// Demonstrate creating a "main" fullscreen menu bar and populating it.
-// Note the difference between BeginMainMenuBar() and BeginMenuBar():
-// - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
-// - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
-static void ShowExampleAppMainMenuBar()
-{
-    if (ImGui::BeginMainMenuBar())
+    while (!done)
     {
-        if (ImGui::BeginMenu("File"))
+
+
+
+        // Poll and handle events (inputs, window resize, etc.)
+        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
         {
-            ShowExampleMenuFile();
-            ImGui::EndMenu();
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT)
+                done = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+                done = true;
         }
-        if (ImGui::BeginMenu("Edit"))
-        {
-            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
-            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
-            ImGui::Separator();
-            if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-            if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
-}
 
-// Note that shortcuts are currently provided for display only
-// (future version will add explicit flags to BeginMenu() to request processing shortcuts)
-static void ShowExampleMenuFile()
-{
-    ImGui::MenuItem("(demo menu)", NULL, false, false);
-    if (ImGui::MenuItem("New")) {}
-    if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-    if (ImGui::BeginMenu("Open Recent"))
-    {
-        ImGui::MenuItem("fish_hat.c");
-        ImGui::MenuItem("fish_hat.inl");
-        ImGui::MenuItem("fish_hat.h");
-        if (ImGui::BeginMenu("More.."))
-        {
-            ImGui::MenuItem("Hello");
-            ImGui::MenuItem("Sailor");
-            if (ImGui::BeginMenu("Recurse.."))
-            {
-                ShowExampleMenuFile();
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenu();
-    }
-    if (ImGui::MenuItem("Save", "Ctrl+S")) {}
-    if (ImGui::MenuItem("Save As..")) {}
 
-    ImGui::Separator();
-    if (ImGui::BeginMenu("Options"))
-    {
-        static bool enabled = true;
-        ImGui::MenuItem("Enabled", "", &enabled);
-        ImGui::BeginChild("child", ImVec2(0, 60), true);
-        for (int i = 0; i < 10; i++)
-            ImGui::Text("Scrolling Text %d", i);
-        ImGui::EndChild();
-        static float f = 0.5f;
-        static int n = 0;
-        ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
-        ImGui::InputFloat("Input", &f, 0.1f);
-        ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
-        ImGui::EndMenu();
-    }
 
-    if (ImGui::BeginMenu("Colors"))
-    {
-        float sz = ImGui::GetTextLineHeight();
-        for (int i = 0; i < ImGuiCol_COUNT; i++)
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
+        ImGui::NewFrame();
+
+
+
+        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
-            const char* name = ImGui::GetStyleColorName((ImGuiCol)i);
-            ImVec2 p = ImGui::GetCursorScreenPos();
-            ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
-            ImGui::Dummy(ImVec2(sz, sz));
+            static float f = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &show_another_window);
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
             ImGui::SameLine();
-            ImGui::MenuItem(name);
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
         }
-        ImGui::EndMenu();
+
+        // 3. Show another simple window.
+        if (show_another_window)
+        {
+            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+            ImGui::Text("Hello from another window!");
+            if (ImGui::Button("Close Me"))
+                show_another_window = false;
+            ImGui::End();
+        }
+
+        // Rendering
+        ImGui::Render();
+
+        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
+        SDL_GL_SwapWindow(window);
+
+
+
+
+
     }
 
-    // Here we demonstrate appending again to the "Options" menu (which we already created above)
-    // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
-    // In a real code-base using it would make senses to use this feature from very different code locations.
-    if (ImGui::BeginMenu("Options")) // <-- Append!
-    {
-        static bool b = true;
-        ImGui::Checkbox("SomeOption", &b);
-        ImGui::EndMenu();
-    }
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
-    if (ImGui::BeginMenu("Disabled", false)) // Disabled
-    {
-        IM_ASSERT(0);
-    }
-    if (ImGui::MenuItem("Checked", NULL, true)) {}
-    if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+    SDL_GL_DeleteContext(gl_context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
+
+
 }
+
+
+
+
+
+
+
