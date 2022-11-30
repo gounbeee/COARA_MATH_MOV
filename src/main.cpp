@@ -19,25 +19,12 @@
 
 
 
-// // FFmpeg library
-// extern "C" {
-// #include "libavutil/imgutils.h"
-// #include "libavcodec/avcodec.h"
-// #include "libavformat/avformat.h"
-// }
-// // #pragma comment(lib, "avutil.lib")
-// // #pragma comment(lib, "avcodec.lib")
-// // #pragma comment(lib, "avformat.lib")
-// void on_frame_decoded(AVFrame* frame) {
-// 	printf("Frame decoded PTS: %jd\n", frame->pts);
-// }
-
-
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/videoio.hpp"
 
-
+#include <time.h>     // for clock()
 
 
 //The music that will be played
@@ -49,7 +36,7 @@ Mix_Music *gMusic = NULL;
 // Mix_Chunk *gMedium = NULL;
 // Mix_Chunk *gLow = NULL;
 
-
+#define PLAY_SPEED 1.0
 
 
 
@@ -205,105 +192,6 @@ int main(int, char**)
 
 
 
-    // // ------------------------------------------------------------------------
-    // // ------------------------------------------------------------------------
-
-
-
-    // // INITIALIZE FFMPEG ????
-    // // *****  YOU DO NOT NEED THIS FROM VERSION 4.0 !!!!
-    // // https://github.com/leandromoreira/ffmpeg-libav-tutorial/issues/29
-
-    // //av_register_all();
-	// //avcodec_register_all();
-	// //avfilter_register_all();
-
-
-
-	// const char* input_path = "resources/sample-15s.mp4";
-	// AVFormatContext* format_context = nullptr;
-
-	// if (avformat_open_input(&format_context, input_path, nullptr, nullptr) != 0) {
-	// 	printf("avformat_open_input failed\n");
-	// }
-
-	// if (avformat_find_stream_info(format_context, nullptr) < 0) {
-	// 	printf("avformat_find_stream_info failed\n");
-	// }
-
-	// AVStream* video_stream = nullptr;
-	// for (int i = 0; i < (int)format_context->nb_streams; ++i) {
-
-	// 	if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-	// 	  	video_stream = format_context->streams[i];
-	// 	  	break;
-	// 	}
-
-	// }
-
-
-	// if (video_stream == nullptr) {
-	// 	printf("No video stream ...\n");
-	// }
-
-	// AVCodec* codec = avcodec_find_decoder(video_stream->codecpar->codec_id);
-
-	// if (codec == nullptr) {
-	// 	printf("No supported decoder ...\n");
-	// }
-
-	// AVCodecContext* codec_context = avcodec_alloc_context3(codec);
-
-	// if (codec_context == nullptr) {
-	// 	printf("avcodec_alloc_context3 failed\n");
-	// }
-
-	// if (avcodec_parameters_to_context(codec_context, video_stream->codecpar) < 0) {
-	// 	printf("avcodec_parameters_to_context failed\n");
-	// }
-
-	// if (avcodec_open2(codec_context, codec, nullptr) != 0) {
-	// 	printf("avcodec_open2 failed\n");
-	// }
-
-
-	// AVFrame* frame = av_frame_alloc();
-	// AVPacket packet = AVPacket();
-
-	// while (av_read_frame(format_context, &packet) == 0) {
-
-
-
-	// 	if (packet.stream_index == video_stream->index) {
-	// 	  	if (avcodec_send_packet(codec_context, &packet) != 0) {
-	// 	    	printf("avcodec_send_packet failed\n");
-	// 	  	}
-
-	// 	  	while (avcodec_receive_frame(codec_context, frame) == 0) {
-	// 	    	on_frame_decoded(frame);
-	// 	  	}
-	// 	}
-
-	// 	av_packet_unref(&packet);
-
-
-	// }
-
-
-	// // flush decoder
-	// if (avcodec_send_packet(codec_context, nullptr) != 0) {
-	// 	printf("avcodec_send_packet failed");
-	// }
-
-	// while (avcodec_receive_frame(codec_context, frame) == 0) {
-	// 	on_frame_decoded(frame);
-	// }
-
-
-
-
-
-
 
     // // ------------------------------------------------------------------------
     // // ------------------------------------------------------------------------
@@ -313,7 +201,7 @@ int main(int, char**)
 
 
 	cv::VideoCapture cap;
-	cap.open("resources/sample_1.mov");
+	cap.open("resources/sample_1.mp4");
 	cv::Mat frame;
 
 
@@ -322,6 +210,10 @@ int main(int, char**)
 
     // // ------------------------------------------------------------------------
     // // ------------------------------------------------------------------------
+
+
+
+
 
 	//Initialization flag
 	bool mixer_success = true;
@@ -342,12 +234,39 @@ int main(int, char**)
 
 
 
+	// ---------------------------------------------------------------
+	// < FOR FPS MEASUREMENT >
+	// https://docs.opencv.org/3.4/d9/d6f/classcv_1_1TickMeter.html
+ 	
+ 	cv::TickMeter tm;
 
 
 
-    while (!done)
-    {
 
+	//clock_t start = clock();    // 動画再生時刻
+
+
+	// GETTING FRAME COUNT FROM FILE
+	int max_frame = cap.get(cv::CAP_PROP_FRAME_COUNT); //フレーム数
+	
+	// GETTING FPS INFORMATION FROM FILE
+	int fps = cap.get(cv::CAP_PROP_FPS); 
+
+	std::cout << fps << std::endl;
+
+
+
+	// CURRENT FRAME NUMBER
+	int CFN = 0;
+
+
+
+	//for (int CFN = 0; CFN < max_frame; CFN++) {
+    while (!done){
+
+
+
+	    tm.start();
 
 
 
@@ -356,19 +275,52 @@ int main(int, char**)
 
 
 		cap.read(frame); 								//1フレーム分取り出してimgに保持させる
+
+		CFN++;	
+
+
 		if (frame.empty()) { 							//読み込んだ画像がempty、つまり最終フレームに達したとき
 			cap.set(cv::CAP_PROP_POS_FRAMES, 0);  		//また最初から再生し直す
+			CFN = 0;
 			cap.read(frame);
 		}
 
 
-    	cv::imshow( "Example 2-3", frame );
-
-	    if( (char)cv::waitKey(33) >= 0 ) break;
+    	cv::imshow( "COARA_MATH_MOV", frame );
 
 
 
 
+
+
+
+
+		// //追加部分
+		// if (wait_time < -40) {
+		// 	int loop_num = -wait_time / 33.3;  //送れているコマ数を計算（FPS=30の動画の場合、一コマ当たり33.3ms）
+		// 	for (int i = 0; i < loop_num; i++) {
+
+
+
+		// 		cap >> frame;  //現在の表示フレームが遅れている場合、その分だけフレームナンバーを進める
+		// 		CFN++;
+
+
+		// 	}
+		// 	std::cout << loop_num << "\n";
+		// }
+
+		// int key = cv::waitKey(int(fmin(fmax(wait_time, 1), 50))); // 表示のために1ms待つ
+
+
+
+
+
+
+		// ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+
+    	// PLAYING MUSIC
 
 
 
@@ -396,6 +348,13 @@ int main(int, char**)
 			// }
 		}
 
+
+
+
+
+
+    	// ------------------------------------------------------------------------	
+    	// ------------------------------------------------------------------------	
 
 
 
@@ -481,29 +440,43 @@ int main(int, char**)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
 
-		// CAPTURE FRAME
-	    //cap >> frame;
-
-
-
-
 
 
         SDL_GL_SwapWindow(window);
 
 
 
+
+
+
+		// ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+
+
+	    tm.stop();
+	    std::cout << "getFPS: " << tm.getFPS() << std::endl;
+	    std::cout << "Total getTimeMilli: " << tm.getTimeMilli() << std::endl;
+	    std::cout << "Total getAvgTimeMilli: " << tm.getAvgTimeMilli() << std::endl;
+
+
+
+		// int wait_time = int((double)CFN / (double(fps) * PLAY_SPEED) * 1000.0 - (double)(end - start));
+
+
+		// //std::cout << wait_time << std::endl;
+		// //std::cout << start << std::endl;
+
+
+
+		// int wait_time2 = (MIN(MAX(wait_time, 1), 50));
+		// //cv::waitKey(wait_time2);
+		
+
+
+
     }
 
 
-
-
-
-
-
-	// av_frame_free(&frame);
-	// avcodec_free_context(&codec_context);
-	// avformat_close_input(&format_context);
 
 
 	//Stop the music

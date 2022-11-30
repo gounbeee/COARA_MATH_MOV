@@ -40,7 +40,22 @@
 # 				|
 # 				- BEFORE .configure WE COMMENTED OUT 'ZLIB_BUILD' BECAUSE IT OCCURED AN ERROR !
 #
-# SDL3          (CLONED FROM GITHUB, BUILT FROM SOURCE, CMAKE, THEN MAKE INSTALL  <-- READ INSTALL DOC)
+# SDL2          (CLONED FROM GITHUB, ./configure -> make -> make install)
 # 				|
 # SDL_MIXER     (CLONED FROM GITHUB, ./configure -> make -> make install)
 # 				|
+#
+#
+# ****          sdl2_gfx sdl2_image sdl2_net sdl2_ttf IS NEEDED ??? 
+#
+#
+#
+#
+#
+#
+#
+#
+#
+
+
+
