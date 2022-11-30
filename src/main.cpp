@@ -7,6 +7,10 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <SDL.h>
+#include <SDL_mixer.h>
+
+
+
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
 #else
@@ -14,6 +18,92 @@
 #endif
 
 
+
+// // FFmpeg library
+// extern "C" {
+// #include "libavutil/imgutils.h"
+// #include "libavcodec/avcodec.h"
+// #include "libavformat/avformat.h"
+// }
+// // #pragma comment(lib, "avutil.lib")
+// // #pragma comment(lib, "avcodec.lib")
+// // #pragma comment(lib, "avformat.lib")
+// void on_frame_decoded(AVFrame* frame) {
+// 	printf("Frame decoded PTS: %jd\n", frame->pts);
+// }
+
+
+
+#include "opencv2/opencv.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+
+
+
+//The music that will be played
+Mix_Music *gMusic = NULL;
+
+// //The sound effects that will be used
+// Mix_Chunk *gScratch = NULL;
+// Mix_Chunk *gHigh = NULL;
+// Mix_Chunk *gMedium = NULL;
+// Mix_Chunk *gLow = NULL;
+
+
+
+
+
+bool loadMedia()
+{
+	//Loading success flag
+	bool success = true;
+
+	// //Load prompt texture
+	// if( !gPromptTexture.loadFromFile( "21_sound_effects_and_music/prompt.png" ) )
+	// {
+	// 	printf( "Failed to load prompt texture!\n" );
+	// 	success = false;
+	// }
+
+	//Load music
+	gMusic = Mix_LoadMUS( "resources/sample_1.mp3" );
+	if( gMusic == NULL )
+	{
+		printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+	
+	// //Load sound effects
+	// gScratch = Mix_LoadWAV( "21_sound_effects_and_music/scratch.wav" );
+	// if( gScratch == NULL )
+	// {
+	// 	printf( "Failed to load scratch sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
+	// 	success = false;
+	// }
+	
+	// gHigh = Mix_LoadWAV( "21_sound_effects_and_music/high.wav" );
+	// if( gHigh == NULL )
+	// {
+	// 	printf( "Failed to load high sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
+	// 	success = false;
+	// }
+
+	// gMedium = Mix_LoadWAV( "21_sound_effects_and_music/medium.wav" );
+	// if( gMedium == NULL )
+	// {
+	// 	printf( "Failed to load medium sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
+	// 	success = false;
+	// }
+
+	// gLow = Mix_LoadWAV( "21_sound_effects_and_music/low.wav" );
+	// if( gLow == NULL )
+	// {
+	// 	printf( "Failed to load low sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
+	// 	success = false;
+	// }
+
+	return success;
+}
 
 
 
@@ -26,7 +116,7 @@ int main(int, char**)
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to the latest version of SDL is recommended!)
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
         printf("Error: %s\n", SDL_GetError());
         return -1;
@@ -115,12 +205,201 @@ int main(int, char**)
 
 
 
+    // // ------------------------------------------------------------------------
+    // // ------------------------------------------------------------------------
+
+
+
+    // // INITIALIZE FFMPEG ????
+    // // *****  YOU DO NOT NEED THIS FROM VERSION 4.0 !!!!
+    // // https://github.com/leandromoreira/ffmpeg-libav-tutorial/issues/29
+
+    // //av_register_all();
+	// //avcodec_register_all();
+	// //avfilter_register_all();
+
+
+
+	// const char* input_path = "resources/sample-15s.mp4";
+	// AVFormatContext* format_context = nullptr;
+
+	// if (avformat_open_input(&format_context, input_path, nullptr, nullptr) != 0) {
+	// 	printf("avformat_open_input failed\n");
+	// }
+
+	// if (avformat_find_stream_info(format_context, nullptr) < 0) {
+	// 	printf("avformat_find_stream_info failed\n");
+	// }
+
+	// AVStream* video_stream = nullptr;
+	// for (int i = 0; i < (int)format_context->nb_streams; ++i) {
+
+	// 	if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+	// 	  	video_stream = format_context->streams[i];
+	// 	  	break;
+	// 	}
+
+	// }
+
+
+	// if (video_stream == nullptr) {
+	// 	printf("No video stream ...\n");
+	// }
+
+	// AVCodec* codec = avcodec_find_decoder(video_stream->codecpar->codec_id);
+
+	// if (codec == nullptr) {
+	// 	printf("No supported decoder ...\n");
+	// }
+
+	// AVCodecContext* codec_context = avcodec_alloc_context3(codec);
+
+	// if (codec_context == nullptr) {
+	// 	printf("avcodec_alloc_context3 failed\n");
+	// }
+
+	// if (avcodec_parameters_to_context(codec_context, video_stream->codecpar) < 0) {
+	// 	printf("avcodec_parameters_to_context failed\n");
+	// }
+
+	// if (avcodec_open2(codec_context, codec, nullptr) != 0) {
+	// 	printf("avcodec_open2 failed\n");
+	// }
+
+
+	// AVFrame* frame = av_frame_alloc();
+	// AVPacket packet = AVPacket();
+
+	// while (av_read_frame(format_context, &packet) == 0) {
+
+
+
+	// 	if (packet.stream_index == video_stream->index) {
+	// 	  	if (avcodec_send_packet(codec_context, &packet) != 0) {
+	// 	    	printf("avcodec_send_packet failed\n");
+	// 	  	}
+
+	// 	  	while (avcodec_receive_frame(codec_context, frame) == 0) {
+	// 	    	on_frame_decoded(frame);
+	// 	  	}
+	// 	}
+
+	// 	av_packet_unref(&packet);
+
+
+	// }
+
+
+	// // flush decoder
+	// if (avcodec_send_packet(codec_context, nullptr) != 0) {
+	// 	printf("avcodec_send_packet failed");
+	// }
+
+	// while (avcodec_receive_frame(codec_context, frame) == 0) {
+	// 	on_frame_decoded(frame);
+	// }
+
+
+
+
+
+
+
+    // // ------------------------------------------------------------------------
+    // // ------------------------------------------------------------------------
+
+
+
+
+
+	cv::VideoCapture cap;
+	cap.open("resources/sample_1.mov");
+	cv::Mat frame;
+
+
+
+
+
+    // // ------------------------------------------------------------------------
+    // // ------------------------------------------------------------------------
+
+	//Initialization flag
+	bool mixer_success = true;
+
+	 //Initialize SDL_mixer
+	if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
+	{
+		printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+		mixer_success = false;
+	}
+
+
+	//Load media
+	if( !loadMedia() )
+	{
+		printf( "Failed to load media!\n" );
+	}
+
+
 
 
 
 
     while (!done)
     {
+
+
+
+
+		// < PLAYING SOUND USING OPENCV ! > 
+		// https://shizenkarasuzon.hatenablog.com/entry/2020/03/21/000437#%E6%94%B9%E8%89%AF%E9%9F%B3%E5%A3%B0%E5%86%8D%E7%94%9F
+
+
+		cap.read(frame); 								//1フレーム分取り出してimgに保持させる
+		if (frame.empty()) { 							//読み込んだ画像がempty、つまり最終フレームに達したとき
+			cap.set(cv::CAP_PROP_POS_FRAMES, 0);  		//また最初から再生し直す
+			cap.read(frame);
+		}
+
+
+    	cv::imshow( "Example 2-3", frame );
+
+	    if( (char)cv::waitKey(33) >= 0 ) break;
+
+
+
+
+
+
+
+
+		//If there is no music playing
+		if( Mix_PlayingMusic() == 0 )
+		{
+			//Play the music
+			Mix_PlayMusic( gMusic, -1 );
+		}
+		//If music is being played
+		else
+		{
+			// //If the music is paused
+			// if( Mix_PausedMusic() == 1 )
+			// {
+			// 	//Resume the music
+			// 	Mix_ResumeMusic();
+			// }
+			// //If the music is playing
+			// else
+			// {
+			// 	//Pause the music
+			// 	Mix_PauseMusic();
+			// }
+		}
+
+
+
+
+
 
 
 
@@ -188,19 +467,50 @@ int main(int, char**)
         // Rendering
         ImGui::Render();
 
+
+
+
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+        
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+
+
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
+
+		// CAPTURE FRAME
+	    //cap >> frame;
+
+
+
+
+
+
         SDL_GL_SwapWindow(window);
 
 
 
-
-
     }
+
+
+
+
+
+
+
+	// av_frame_free(&frame);
+	// avcodec_free_context(&codec_context);
+	// avformat_close_input(&format_context);
+
+
+	//Stop the music
+	Mix_HaltMusic();
+
+
+
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();

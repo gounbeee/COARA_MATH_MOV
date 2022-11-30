@@ -42,3 +42,5 @@
 #
 # SDL3          (CLONED FROM GITHUB, BUILT FROM SOURCE, CMAKE, THEN MAKE INSTALL  <-- READ INSTALL DOC)
 # 				|
+# SDL_MIXER     (CLONED FROM GITHUB, ./configure -> make -> make install)
+# 				|

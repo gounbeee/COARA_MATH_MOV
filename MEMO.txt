@@ -1,4 +1,135 @@
 
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+siyoungchoi@sys-Mac-mini-103 SDL_mixer % make install
+/bin/sh ./build-scripts//mkinstalldirs /usr/local/include/SDL2
+umask 22
+mkdir /usr/local/include/SDL2
+for src in ./include/SDL_mixer.h; do \
+	    file=`echo $src | sed -e 's|^.*/||'`; \
+	    /usr/bin/install -c -m 644 $src /usr/local/include/SDL2/$file; \
+	done
+/bin/sh ./build-scripts//mkinstalldirs /usr/local/lib/pkgconfig
+/usr/bin/install -c -m 644 SDL2_mixer.pc /usr/local/lib/pkgconfig/
+/bin/sh ./build-scripts//mkinstalldirs /usr/local/lib/cmake/SDL2_mixer/
+umask 22
+mkdir /usr/local/lib/cmake/SDL2_mixer
+/usr/bin/install -c -m 644 sdl2_mixer-config.cmake /usr/local/lib/cmake/SDL2_mixer
+/usr/bin/install -c -m 644 sdl2_mixer-config-version.cmake /usr/local/lib/cmake/SDL2_mixer
+/bin/sh ./build-scripts//mkinstalldirs /usr/local/lib
+/bin/sh ./libtool --mode=install /usr/bin/install -c build/libSDL2_mixer.la /usr/local/lib/libSDL2_mixer.la
+libtool: install: /usr/bin/install -c build/.libs/libSDL2_mixer-2.0.0.dylib /usr/local/lib/libSDL2_mixer-2.0.0.dylib
+libtool: install: (cd /usr/local/lib && { ln -s -f libSDL2_mixer-2.0.0.dylib libSDL2_mixer.dylib || { rm -f libSDL2_mixer.dylib && ln -s libSDL2_mixer-2.0.0.dylib libSDL2_mixer.dylib; }; })
+libtool: install: /usr/bin/install -c build/.libs/libSDL2_mixer.lai /usr/local/lib/libSDL2_mixer.la
+libtool: install: /usr/bin/install -c build/.libs/libSDL2_mixer.a /usr/local/lib/libSDL2_mixer.a
+libtool: install: chmod 644 /usr/local/lib/libSDL2_mixer.a
+libtool: install: ranlib /usr/local/lib/libSDL2_mixer.a
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /usr/local/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the `-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the `DYLD_LIBRARY_PATH' environment variable
+     during execution
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+
+
+
+
+
+
+FFMPEG 
+
+
+1. JAPANESE TUTORIAL
+https://proc-cpuinfo.fixstars.com/2017/08/ffmpeg-api-decode/
+
+
+
+2. OFFICIAL DOXYGEN
+https://www.ffmpeg.org/doxygen/trunk/group__libavf.html
+
+
+
+
+3. HOW TO COMPILE ! (COMPILATION SECTION!)
+https://trac.ffmpeg.org/wiki/CompilationGuide/macOS
+
+
+
+4. CODECS REQUIRED!
+
+H264
+http://www.videolan.org/developers/x264.html
+
+
+fdk-aac
+https://sourceforge.net/projects/opencore-amr/files/fdk-aac/
+
+
+VORBIS
+https://ftp.osuosl.org/pub/xiph/releases/vorbis/
+
+
+OPUS
+https://www.opus-codec.org/downloads/
+
+
+
+MP3 LAME
+https://sourceforge.net/projects/lame/files/lame/
+
+
+
+ASS
+https://github.com/libass/libass
+
+
+
+
+
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
 // < DELETE ALL FILE MATCHED !!!! >
 // https://superuser.com/questions/89413/delete-files-recursively-matching-a-name-on-the-command-line-os-x
@@ -8,10 +139,22 @@ find . -name '._*' -type f -delete
 
 
 
+
+
+
+
+
+
+
 // ------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------
+
+
+
+
+
 
 
 // < USING nm COMMAND >
